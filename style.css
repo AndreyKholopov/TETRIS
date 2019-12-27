@@ -13,6 +13,11 @@ body {
 	color: #fff;
 }
 
+#root span {
+	padding-left: 4px;
+	padding-right: 4px;
+}
+
 #root canvas {
 	display: block;
 	margin: 0 auto;
