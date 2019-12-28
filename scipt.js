@@ -6,15 +6,8 @@ class Game {
 	playField = this.createPlayField();
 	activePieceX = 0;
 	activePieceY = 0;
-	activePiece = {
-		x: 0,
-		y: 0,
-		blocks: [
-			[0,1,0],
-			[1,1,1],
-			[0,0,0]
-		],
-	};
+	activePiece = this.createPiece();
+	nextPiece = this.createPiece();
 
 	//returning the state of the playing field
 	getState() {
@@ -56,6 +49,74 @@ class Game {
 		return playField;
 	}
 
+	//block creation
+	createPiece() {
+		const index = Math.floor(Math.random() * 7);
+		const type = 'IJLOSTZ'[index];
+		const piece = {};
+
+		switch (type) {
+			case 'I':
+				piece.blocks = [
+					[0,0,0,0],
+					[1,1,1,1],
+					[0,0,0,0],
+					[0,0,0,0]
+				];
+				break;
+			case 'J':
+				piece.blocks = [
+					[0,0,0],
+					[2,2,2],
+					[0,0,2]
+				];
+				break;
+			case 'L':
+				piece.blocks = [
+					[0,0,0],
+					[3,3,3],
+					[3,0,0]
+				];
+				break;
+			case 'O':
+				piece.blocks = [
+					[0,0,0,0],
+					[0,4,4,0],
+					[0,4,4,0],
+					[0,0,0,0]
+				];
+				break;
+			case 'S':
+				piece.blocks = [
+					[0,0,0],
+					[0,5,5],
+					[5,5,0]
+				];
+				break;
+			case 'T':
+				piece.blocks = [
+					[0,0,0],
+					[6,6,6],
+					[0,6,0]
+				];
+				break;
+			case 'Z':
+				piece.blocks = [
+					[0,0,0],
+					[7,7,0],
+					[0,7,7]
+				];
+				break;
+			default:
+				throw new Error('unknown type of figure');
+		}
+
+		piece.x = Math.floor((10 - piece.blocks[0].length) / 2);
+		piece.y = -1;
+
+		return piece;
+	}
+
 	//functions movement of the active figure
 	movePieceLeft() {
 		this.activePiece.x -= 1;
@@ -77,6 +138,7 @@ class Game {
 		if (this.hasCollision()) {
 			this.activePiece.y -=1;
 			this.lockPiece();
+			this.updatePieces();
 		}
 	}
 
@@ -142,9 +204,26 @@ class Game {
 			}
 		}
 	}
+
+	//next block creation
+	updatePieces () {
+		this.activePiece = this.nextPiece;
+		this.nextPiece = this.createPiece();
+	}
 }
 
 class View {
+	//block colors
+	static colors = {
+		'1': '#ff0000',
+		'2': '#00ff00',
+		'3': '#ffff00',
+		'4': '#0000ff',
+		'5': '#ff9900',
+		'6': '#9900ff',
+		'7': '#00ffff'
+	};
+
 	//definition of arguments when creating a class view
 	constructor (element, width, height, rows, columns) {
 		this.element = element;
@@ -181,7 +260,7 @@ class View {
 				const block = line[x];
 
 				if (block) {
-					this.renderBlock(x * this.blockWidth, y * this.blockHeight, this.blockWidth, this.blockHeight, '#ff0000');
+					this.renderBlock(x * this.blockWidth, y * this.blockHeight, this.blockWidth, this.blockHeight, View.colors[block]);
 				}
 			}
 		}
