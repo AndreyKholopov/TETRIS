@@ -42,6 +42,10 @@ class Game {
 		}
 
 		return {
+			score: this.score,
+			level: this.level,
+			lines: this.lines,
+			nextPiece: this.nextPiece,
 			playField
 		};
 	}
@@ -288,15 +292,63 @@ class View {
 		this.canvas.height = this.height;
 		this.context = this.canvas.getContext('2d');
 
-		this.blockWidth = this.width / columns;
-		this.blockHeight = this.height / rows;
+		this.playFieldBorderWidth = 4;
+		this.playFieldX = this.playFieldBorderWidth;
+		this.playFieldY = this.playFieldBorderWidth;
+		this.playFieldWidth = this.width * 2 / 3;
+		this.playFieldHeight = this.height;
+		this.playFieldInnerWidth = this.playFieldWidth - this.playFieldBorderWidth * 2;
+		this.playFieldInnerHeight = this.playFieldHeight - this.playFieldBorderWidth * 2;
+
+		this.blockWidth = this.playFieldInnerWidth / columns;
+		this.blockHeight = this.playFieldInnerHeight / rows;
+
+		this.panelX = this.playFieldWidth + 10;
+		this.panelY = 0;
+		this.panelWidth = this.width / 3;
+		this.panelHeight = this.height;
 
 		this.element.appendChild(this.canvas);
 	}
 
-	render ({ playField }) {
+	//render Game
+	renderMainScreen (state) {
 		this.clearScreen();
-		this.renderPlayField(playField);	
+		this.renderPlayField(state);	
+		this.renderPanel(state);
+	}
+
+	//start screen render
+	renderStartScreen() {
+		this.context.fillStyle = '#fff';
+		this.context.font = '18px "Press Start 2P"';
+		this.context.textAlign = 'center';
+		this.context.textBaseline = 'middle';
+		this.context.fillText('Press ENTER to Start', this.width / 2, this.height / 2);
+	}
+
+	//pause screen render
+	renderPauseScreen() {
+		this.context.fillStyle = 'rgba(0, 0, 0, 75)';
+		this.context.fillRect(0, 0, this.width, this.height);
+
+		this.context.fillStyle = '#fff';
+		this.context.font = '18px "Press Start 2P"';
+		this.context.textAlign = 'center';
+		this.context.textBaseline = 'middle';
+		this.context.fillText('Press ENTER to Resume', this.width / 2, this.height / 2);
+	}
+
+	//game over screen render
+	renderEndScreen({ score }) {
+		this.clearScreen();
+
+		this.context.fillStyle = '#fff';
+		this.context.font = '18px "Press Start 2P"';
+		this.context.textAlign = 'center';
+		this.context.textBaseline = 'middle';
+		this.context.fillText('GAME OVER', this.width / 2, this.height / 2 - 48);
+		this.context.fillText(`Score: ${score}`, this.width / 2, this.height / 2);
 	}
 
 	//cleaning the playing field
@@ -305,7 +357,7 @@ class View {
 	}
 
 	//render of the playing field
-	renderPlayField (playField) {
+	renderPlayField ({ playField }) {
 		for (let y = 0; y < playField.length; y++) {
 			const line = playField[y];
 
@@ -313,7 +365,46 @@ class View {
 				const block = line[x];
 
 				if (block) {
-					this.renderBlock(x * this.blockWidth, y * this.blockHeight, this.blockWidth, this.blockHeight, View.colors[block]);
+					this.renderBlock(
+						this.playFieldX + (x * this.blockWidth), 
+						this.playFieldY + (y * this.blockHeight), 
+						this.blockWidth,
+						this.blockHeight, 
+						View.colors[block]
+					);
+				}
+			}
+		}
+
+		this.context.strokeStyle = '#fff';
+		this.context.lineWidth = this.playFieldBorderWidth;
+		this.context.strokeRect(0, 0, this.playFieldWidth, this.playFieldHeight);
+	}
+
+	//Sidebar display
+	renderPanel({ level, score, lines, nextPiece}) {
+		this.context.textAlign = 'start';
+		this.context.textBaseline = 'top';
+		this.context.fillStyle = '#fff';
+		this.context.font = '14px "Press Start 2P"';
+
+		this.context.fillText(`Score: ${score}`, this.panelX, this.panelY + 0);
+		this.context.fillText(`Lines: ${lines}`, this.panelX, this.panelY + 24);
+		this.context.fillText(`Level: ${level}`, this.panelX, this.panelY + 48);
+		this.context.fillText('Next: ', this.panelX, this.panelY + 96);
+
+		for (let y = 0; y < nextPiece.blocks.length; y++) {
+			for (let x = 0; x < nextPiece.blocks[y].length; x++) {
+				const block = nextPiece.blocks[y][x];
+
+				if (block) {
+					this.renderBlock(
+						this.panelX + (x * this.blockWidth * 0.7),
+						this.panelY + 100 + (y * this.blockHeight * 0.7),
+						this.blockWidth * 0.7,
+						this.blockHeight * 0.7,
+						View.colors[block]
+					);
 				}
 			}
 		}
@@ -333,7 +424,7 @@ class View {
 const root = document.querySelector('#root');
 
 const game = new Game();
-const view = new View(root, 320, 640, 20, 10);
+const view = new View(root, 480, 640, 20, 10);
 
 window.game = game;
 window.view = view;
@@ -342,19 +433,21 @@ document.addEventListener('keydown', event => {
 	switch (event.keyCode) {
 		case 37: //Left arrow
 			game.movePieceLeft();
-			view.render(game.getState());
+			view.renderMainScreen(game.getState());
 			break;
 		case 38: //Up arrow
 			game.rotatePiece();
-			view.render(game.getState());
+			view.renderMainScreen(game.getState());
 			break;
 		case 39: //Right arrow 
 			game.movePieceRight();
-			view.render(game.getState());
+			view.renderMainScreen(game.getState());
 			break;
 		case 40: //Down arrow
 			game.movePieceDown();
-			view.render(game.getState());
+			view.renderMainScreen(game.getState());
 			break;
 	}
 });
+
+view.renderStartScreen(game.getState());
