@@ -1,4 +1,4 @@
-# [TETRIS] (https://andreykholopov.github.io/TETRIS/)
+# [TETRIS](https://andreykholopov.github.io/TETRIS/)
 Tetris on JavaScript + HTML5.
 This work is done on pure Javascript. Without the use of frameworks. Used object-oriented programming.
 
